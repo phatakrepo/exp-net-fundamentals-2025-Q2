@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+# Exit on error
+set -e
+
+# ---------------------
+# Input Parameters
+# ---------------------
+STACK_NAME= "NetBootVPC"
+REGION=${2:-us-east-1}
+TEMPLATE_FILE=${3:-vpc-template.yaml}
+VPC_CIDR=${4:-10.200.123.0/24}
+PUBLIC_SUBNET_CIDR=${5:-10.200.123.0/25}
+PRIVATE_SUBNET_CIDR=${6:-10.200.123.128/25}
+AVAILABILITY_ZONE=${7:-us-east-1a}
+
+# ---------------------
+# Validate Template
+# ---------------------
+echo "Validating CloudFormation template..."
+aws cloudformation validate-template \
+  --template-body file://$TEMPLATE_FILE
+
+# ---------------------
+# Deploy Stack
+# ---------------------
+echo "Deploying CloudFormation stack: $STACK_NAME"
+
+aws cloudformation deploy \
+  --stack-name "$STACK_NAME" \
+  --region "$REGION" \
+  --template-file "$TEMPLATE_FILE" \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --parameter-overrides \
+      VpcCIDR="$VPC_CIDR" \
+      PublicSubnetCIDR="$PUBLIC_SUBNET_CIDR" \
+      PrivateSubnetCIDR="$PRIVATE_SUBNET_CIDR" \
+      AvailabilityZone="$AVAILABILITY_ZONE"
+
+echo "✅ Stack '$STACK_NAME' deployed successfully in region '$REGION'."
